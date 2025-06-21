@@ -3,11 +3,13 @@ import cv2
 import numpy as np
 from fastapi import FastAPI, WebSocket
 from fastapi.responses import HTMLResponse
+from prometheus_fastapi_instrumentator import Instrumentator
 import mediapipe as mp
 import math
 import json
 
 app = FastAPI()
+Instrumentator().instrument(app).expose(app)
 mp_drawing = mp.solutions.drawing_utils
 mp_face_mesh = mp.solutions.face_mesh
 mp_pose = mp.solutions.pose
@@ -58,7 +60,7 @@ html = """
 """
 
 def calculate_angle(a, b, c):
-    # a, b, c: (x, y)
+    
     ba = np.array(a) - np.array(b)
     bc = np.array(c) - np.array(b)
     cosine_angle = np.dot(ba, bc) / (np.linalg.norm(ba) * np.linalg.norm(bc))
@@ -85,27 +87,27 @@ async def websocket_endpoint(websocket: WebSocket):
             face_results = face_mesh.process(img_rgb)
             pose_results = pose.process(img_rgb)
 
-            # 어깨와 코 위치 추출
+            
             nose = None
             left_shoulder = None
             right_shoulder = None
             h, w, _ = img.shape
-            # 코: face mesh 1번
+            
             if face_results.multi_face_landmarks:
                 face_landmarks = face_results.multi_face_landmarks[0]
                 nose_landmark = face_landmarks.landmark[1]
                 nose = (int(nose_landmark.x * w), int(nose_landmark.y * h))
-            # 어깨: pose 11(왼), 12(오)
+           
             if pose_results.pose_landmarks:
                 left = pose_results.pose_landmarks.landmark[11]
                 right = pose_results.pose_landmarks.landmark[12]
                 left_shoulder = (int(left.x * w), int(left.y * h))
                 right_shoulder = (int(right.x * w), int(right.y * h))
-            # 각도 계산 및 시각화
+            
             angle = None
             if nose and left_shoulder and right_shoulder:
                 angle = calculate_angle(left_shoulder, nose, right_shoulder)
-                # 시각화
+                
                 cv2.circle(img, nose, 5, (0,255,0), -1)
                 cv2.circle(img, left_shoulder, 5, (255,0,0), -1)
                 cv2.circle(img, right_shoulder, 5, (0,0,255), -1)
@@ -114,7 +116,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 cv2.putText(img, f"Angle: {angle:.1f}", (nose[0]+10, nose[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,255), 2)
             _, buffer = cv2.imencode('.jpg', img)
             img_b64 = base64.b64encode(buffer).decode('utf-8')
-            # 각도 검출 여부와 이미지 함께 전송
+            
             await websocket.send_text(json.dumps({
                 'has_angle': angle is not None,
                 'img': img_b64
