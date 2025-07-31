@@ -5,9 +5,14 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "bcrypt>=4.3.0",
+    "beanie>=2.0.0",
     "fastapi[standard]>=0.115.12",
     "mediapipe>=0.10.21",
+    "motor>=3.7.1",
     "opencv-python>=4.11.0.86",
     "prometheus-fastapi-instrumentator>=7.1.0",
+    "pydantic-settings>=2.10.1",
+    "python-jose>=3.5.0",
     "uvicorn>=0.34.3",
 ]

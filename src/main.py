@@ -5,8 +5,13 @@ from fastapi import FastAPI, WebSocket
 from fastapi.responses import HTMLResponse
 from prometheus_fastapi_instrumentator import Instrumentator
 import mediapipe as mp
-import math
 import json
+from .config import settings
+
+
+for setting in settings:
+    if not setting:
+        raise EnvironmentError(f"환경변수:{setting} 를 찾을 수 없습니다.")
 
 app = FastAPI()
 Instrumentator().instrument(app).expose(app)
@@ -59,23 +64,26 @@ html = """
 </html>
 """
 
+
 def calculate_angle(a, b, c):
-    
+
     ba = np.array(a) - np.array(b)
     bc = np.array(c) - np.array(b)
     cosine_angle = np.dot(ba, bc) / (np.linalg.norm(ba) * np.linalg.norm(bc))
     angle = np.arccos(np.clip(cosine_angle, -1.0, 1.0))
     return np.degrees(angle)
 
+
 @app.get("/")
 async def get():
     return HTMLResponse(html)
+
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     with mp_face_mesh.FaceMesh(static_image_mode=False, max_num_faces=1) as face_mesh, \
-         mp_pose.Pose(static_image_mode=False) as pose:
+            mp_pose.Pose(static_image_mode=False) as pose:
         while True:
             data = await websocket.receive_text()
             img_bytes = base64.b64decode(data)
@@ -87,36 +95,36 @@ async def websocket_endpoint(websocket: WebSocket):
             face_results = face_mesh.process(img_rgb)
             pose_results = pose.process(img_rgb)
 
-            
             nose = None
             left_shoulder = None
             right_shoulder = None
             h, w, _ = img.shape
-            
+
             if face_results.multi_face_landmarks:
                 face_landmarks = face_results.multi_face_landmarks[0]
                 nose_landmark = face_landmarks.landmark[1]
                 nose = (int(nose_landmark.x * w), int(nose_landmark.y * h))
-           
+
             if pose_results.pose_landmarks:
                 left = pose_results.pose_landmarks.landmark[11]
                 right = pose_results.pose_landmarks.landmark[12]
                 left_shoulder = (int(left.x * w), int(left.y * h))
                 right_shoulder = (int(right.x * w), int(right.y * h))
-            
+
             angle = None
             if nose and left_shoulder and right_shoulder:
                 angle = calculate_angle(left_shoulder, nose, right_shoulder)
-                
-                cv2.circle(img, nose, 5, (0,255,0), -1)
-                cv2.circle(img, left_shoulder, 5, (255,0,0), -1)
-                cv2.circle(img, right_shoulder, 5, (0,0,255), -1)
-                cv2.line(img, left_shoulder, nose, (255,255,0), 2)
-                cv2.line(img, right_shoulder, nose, (255,255,0), 2)
-                cv2.putText(img, f"Angle: {angle:.1f}", (nose[0]+10, nose[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,255), 2)
+
+                cv2.circle(img, nose, 5, (0, 255, 0), -1)
+                cv2.circle(img, left_shoulder, 5, (255, 0, 0), -1)
+                cv2.circle(img, right_shoulder, 5, (0, 0, 255), -1)
+                cv2.line(img, left_shoulder, nose, (255, 255, 0), 2)
+                cv2.line(img, right_shoulder, nose, (255, 255, 0), 2)
+                cv2.putText(img, f"Angle: {angle:.1f}", (
+                    nose[0]+10, nose[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
             _, buffer = cv2.imencode('.jpg', img)
             img_b64 = base64.b64encode(buffer).decode('utf-8')
-            
+
             await websocket.send_text(json.dumps({
                 'has_angle': angle is not None,
                 'img': img_b64
