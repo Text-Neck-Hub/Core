@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException, status
 from ..models.users import User
-from ..database.connection import Database
+from ..database.orm import Database
 
 
 user_router = APIRouter(
-    prefix="core/users",
+    prefix="/core/users",
     tags=["Users"]
 )
 user_db = Database(User)

@@ -86,5 +86,3 @@ LOGGING_CONFIG = {
         "level": "INFO"
     }
 }
-
-logging.config.dictConfig(LOGGING_CONFIG)

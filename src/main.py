@@ -2,9 +2,13 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from prometheus_fastapi_instrumentator import Instrumentator
 
-from src.database.orm import initialize_database
+from src.database.connection import initialize_database
 from .config import settings
-from routes.users import user_router
+from .routes.users import user_router
+
+import logging.config
+from src.utils.logging import LOGGING_CONFIG
+logging.config.dictConfig(LOGGING_CONFIG)
 
 
 @asynccontextmanager

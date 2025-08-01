@@ -11,8 +11,10 @@ class Settings(BaseSettings):
     JWT_AUDIENCE: str
     JWT_ISSUER: str
 
+    CORE_DATABASE_URL: str
+
     model_config = SettingsConfigDict(
-        env_file=None,
+        env_file='/app/src/.env',
         extra='ignore'
     )
 

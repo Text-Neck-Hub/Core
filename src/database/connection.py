@@ -1,14 +1,14 @@
 from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
-from ..utils import logging
-from config import settings
+import logging
+from ..config import settings
 
 logger = logging.getLogger('prod')
 
 
 async def initialize_database():
     try:
-        client = AsyncIOMotorClient(settings.DATABASE_URL)
+        client = AsyncIOMotorClient(settings.CORE_DATABASE_URL)
         await init_beanie(
             database=client.get_default_database(),
             document_models=[]

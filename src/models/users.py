@@ -1,6 +1,6 @@
 
 from typing import List
-from ..schemas import Angle
+from ..schemas.angles import Angle
 from beanie import Document, Link
 from pydantic import Field
 from ..schemas.options import Option
