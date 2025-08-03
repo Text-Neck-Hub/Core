@@ -19,7 +19,8 @@ class Database:
         await doc.delete()
 
     async def get(self, id: int):
-        doc = await self.model.get(id)
+
+        doc = await self.model.find_one(self.model.user_id == id)
         return doc
 
     async def update(self, id: int, body):

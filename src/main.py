@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from prometheus_fastapi_instrumentator import Instrumentator
 
+from fastapi.middleware.cors import CORSMiddleware
+
 from src.database.connection import initialize_database
 from .config import settings
 from .routes.users import user_router
@@ -17,9 +19,27 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(
-    lifespan=lifespan
+    lifespan=lifespan,
+    docs_url="/core/docs",
+    redoc_url="/core/redoc",
+    openapi_url="/core/openapi.json"
 )
-app.include_router(user_router)
+
+origins = [
+    "https://www.textneckhub.p-e.kr"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+app.include_router(user_router, prefix="/core/v1")
+
 
 for field_name, value in settings.model_dump().items():
     if value is None or value == "":
