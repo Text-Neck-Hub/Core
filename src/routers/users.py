@@ -10,7 +10,7 @@ import logging
 logger = logging.getLogger('prod')
 
 user_router = APIRouter(
-    prefix="/users",
+    prefix="/dashboard",
     tags=["Users"],
 
 )
@@ -22,7 +22,7 @@ user_db = Database(User)
 async def get_my_settings(
     current_user_data: Annotated[TokenData, Depends(get_valid_token_payload)]
 ):
-    logger.info('sssssssss')
+
     my_settings_doc: User | None = None
 
     try:
@@ -44,5 +44,5 @@ async def get_my_settings(
 
     return {
         "message": f"{current_user_data.user_id}님의 설정 정보를 성공적으로 가져왔습니다.",
-        "settings": 'my_settings',
+        "settings": my_settings_doc.model_dump_json(),
     }

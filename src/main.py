@@ -6,8 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.database.connection import initialize_database
 from .config import settings
-from .routes.users import user_router
-
+from .routers.users import user_router
+from .routers.textneck import textneck_router
 import logging.config
 from src.utils.logging import LOGGING_CONFIG
 logging.config.dictConfig(LOGGING_CONFIG)
@@ -39,7 +39,7 @@ app.add_middleware(
 
 
 app.include_router(user_router, prefix="/core/v1")
-
+app.include_router(textneck_router, prefix="/core/v1")
 
 for field_name, value in settings.model_dump().items():
     if value is None or value == "":
