@@ -1,5 +1,7 @@
+
+
 from typing import List
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import WebSocket
 
 
 class ConnectionManager:
@@ -18,7 +20,15 @@ class ConnectionManager:
 
     async def broadcast(self, message: str):
         for connection in self.active_connections:
-            await connection.send_text(message)
+
+            try:
+                await connection.send_text(message)
+            except RuntimeError as e:
+                print(f"메시지 전송 중 오류 발생: {e}, 연결 끊음")
+                self.disconnect(connection)
+            except Exception as e:
+                print(f"알 수 없는 오류 발생: {e}, 연결 끊음")
+                self.disconnect(connection)
 
 
 manager = ConnectionManager()

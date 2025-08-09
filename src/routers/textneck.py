@@ -1,5 +1,5 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from ..services.websocket_manager import manager
+from ..connection.manager import manager
 from ..services.core import process_image_frame
 
 import logging
