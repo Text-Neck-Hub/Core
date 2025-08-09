@@ -1,5 +1,4 @@
-from typing import Annotated, List
-
+from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from ..models.users import User

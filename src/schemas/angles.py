@@ -3,7 +3,7 @@ from datetime import datetime
 from enum import Enum
 
 
-class NeckStatus(Enum):
+class Status(Enum):
     HEALTHY = 0
     CAUTION = 1
     DANGER = 2
@@ -11,5 +11,5 @@ class NeckStatus(Enum):
 
 class Angle(BaseModel):
     angle: int
-    result: NeckStatus
+    result: Status
     loged_at: datetime = datetime.now()
