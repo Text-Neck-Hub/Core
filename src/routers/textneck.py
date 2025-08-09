@@ -20,6 +20,5 @@ async def predict_textneck(websocket: WebSocket):
         logger.info(f"Client disconnected: {websocket.client}")
         manager.disconnect(websocket)
     except Exception as e:
-
         logger.error(f"WebSocket error: {e}", exc_info=True)
         manager.disconnect(websocket)
