@@ -1,15 +1,10 @@
-from pydantic import BaseModel
-from datetime import datetime
-from enum import Enum
-
-
-class Status(Enum):
-    HEALTHY = 0
-    CAUTION = 1
-    DANGER = 2
+from pydantic import BaseModel, Field
+from datetime import datetime, timezone
 
 
 class Angle(BaseModel):
-    angle: int
-    result: Status
-    loged_at: datetime = datetime.now()
+    angle: float
+    shoulder_y_diff: float
+    shoulder_y_avg: float
+    logged_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc))
