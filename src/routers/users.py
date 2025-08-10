@@ -25,7 +25,7 @@ async def get_my_settings(
     my_settings_doc: User | None = None
 
     try:
-        my_settings_doc = await user_db.get_by_id(id=current_user_data.user_id)
+        my_settings_doc = await user_db.get_by_user_id(user_id=current_user_data.user_id)
     except Exception as e:
         logger.exception(f"유저 설정 ({current_user_data.user_id}) 불러오기 실패: {e}😡🤖")
         raise HTTPException(

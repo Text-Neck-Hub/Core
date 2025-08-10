@@ -1,4 +1,5 @@
 from typing import Any, Generic, List, Optional, Type, TypeVar, Union, Dict
+
 from beanie import Document, PydanticObjectId
 from pydantic import BaseModel
 
@@ -17,13 +18,21 @@ class Database(Generic[TDoc]):
         return await self.model.find_all().to_list()
 
     async def get_by_id(self, id: Union[PydanticObjectId, str]) -> Optional[TDoc]:
-        return await self.model.get(id)
+        return await self.get_by_mongo_id(id)
+
+    async def get_by_mongo_id(self, _id: Union[PydanticObjectId, str]) -> Optional[TDoc]:
+        if isinstance(_id, str):
+            _id = PydanticObjectId(_id)
+        return await self.model.get(_id)
+
+    async def get_by_user_id(self, user_id: int) -> Optional[TDoc]:
+        return await self.model.find_one({"user_id": user_id})
 
     async def find_one(self, filter_: Dict[str, Any]) -> Optional[TDoc]:
         return await self.model.find_one(filter_)
 
-    async def delete(self, id: Union[PydanticObjectId, str]) -> bool:
-        doc = await self.model.get(id)
+    async def delete(self, _id: Union[PydanticObjectId, str]) -> bool:
+        doc = await self.get_by_mongo_id(_id)
         if not doc:
             return False
         await doc.delete()
@@ -31,10 +40,10 @@ class Database(Generic[TDoc]):
 
     async def update(
         self,
-        id: Union[PydanticObjectId, str],
+        _id: Union[PydanticObjectId, str],
         body: Union[BaseModel, Dict[str, Any]]
     ) -> Optional[TDoc]:
-        doc = await self.model.get(id)
+        doc = await self.get_by_mongo_id(_id)
         if not doc:
             return None
 
@@ -44,10 +53,10 @@ class Database(Generic[TDoc]):
             data = {k: v for k, v in body.items() if v is not None}
 
         if not data:
-            return await self.model.get(id)
+            return await self.get_by_mongo_id(_id)
 
         await doc.update({"$set": data})
-        return await self.model.get(id)
+        return await self.get_by_mongo_id(_id)
 
     async def push_many_by_user_id(
         self,
