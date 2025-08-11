@@ -82,12 +82,12 @@ class Database(Generic[TDoc]):
         if not payload:
             return await self.model.find_one(self.model.user_id == user_id)
 
-        coll = self.model.get_motor_collection()
+        coll = self.model.get_pymongo_collection()
         await coll.update_one(
             {"user_id": user_id},
             {
-                "$setOnInsert": {"user_id": user_id, "logs": []},
-                "$push": {"logs": {"$each": payload, "$slice": -int(slice_max)}}
+                "$setOnInsert": {"user_id": user_id},
+                "$push": {"angles_logs": {"$each": payload, "$slice": -int(slice_max)}}
             },
             upsert=True
         )

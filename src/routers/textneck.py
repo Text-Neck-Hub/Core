@@ -125,8 +125,8 @@ async def predict_textneck(
                         logged_at=datetime.now(timezone.utc)
                     )
                     stack.append(log)
-                    if len(stack) >= 15:
-                        await user_repo.push_many_by_user_id(
+                    if len(stack) >= 3:
+                        logs = await user_repo.push_many_by_user_id(
                             user_id=current_user_data.user_id,
                             items=stack
                         )
