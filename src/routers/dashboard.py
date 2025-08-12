@@ -1,10 +1,9 @@
 from typing import Annotated, List
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from ..models.users import User
+
 from ..schemas.logs import Log
-from ..database.orm import Database
-from ..auth.authentication import get_valid_token_payload
+from ..auth.authentication import get_http_token_payload
 from ..schemas.jwt import TokenData
 import logging
 logger = logging.getLogger('prod')
@@ -15,12 +14,10 @@ dashboard_router = APIRouter(
 
 )
 
-user_db = Database(User)
-
 
 @dashboard_router.get("/")
 async def get_my_settings(
-    current_user_data: Annotated[TokenData, Depends(get_valid_token_payload)]
+    current_user_data: Annotated[TokenData, Depends(get_http_token_payload)]
 ) -> List[Log] | None:
 
     user: User | None = None
