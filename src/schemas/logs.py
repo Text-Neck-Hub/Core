@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from datetime import datetime, timezone
 
 
-class Angle(BaseModel):
+class Log(BaseModel):
     angle: float
     shoulder_y_diff: float
     shoulder_y_avg: float

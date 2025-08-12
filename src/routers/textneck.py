@@ -6,15 +6,13 @@ import logging
 
 from ..connection.manager import manager
 from ..services.core import CoreService
-from ..database.orm import Database
-from ..models.users import User
+from ..repositories.log_repository import LogRepository
 from ..auth.authentication import get_ws_token_payload
 from ..schemas.jwt import TokenData
-from ..schemas.angles import Angle
+from ..schemas.logs import Angle
 
 logger = logging.getLogger('prod')
 textneck_router = APIRouter(prefix="/ws")
-user_repo = Database(User)
 COMMANDS = {"init", "pause", "resume", "stop"}
 
 
@@ -85,7 +83,6 @@ async def predict_textneck(
                             "shoulder_y_avg_threshold": shoulder_y_avg_threshold
                         }
                     })
-                    continue
 
                 if cmd == "pause":
                     if not paused:
@@ -125,8 +122,8 @@ async def predict_textneck(
                         logged_at=datetime.now(timezone.utc)
                     )
                     stack.append(log)
-                    if len(stack) >= 3:
-                        logs = await user_repo.push_many_by_user_id(
+                    if len(stack) >= 5:
+                        await LogRepository.push_logs(
                             user_id=current_user_data.user_id,
                             items=stack
                         )
@@ -137,7 +134,7 @@ async def predict_textneck(
     except WebSocketDisconnect:
         if stack:
             try:
-                await user_repo.push_many_by_user_id(
+                await LogRepository.push_logs(
                     user_id=current_user_data.user_id,
                     items=stack
                 )
@@ -149,7 +146,7 @@ async def predict_textneck(
         logger.error(f"WebSocket error: {e}", exc_info=True)
         if stack:
             try:
-                await user_repo.push_many_by_user_id(
+                await LogRepository.push_logs(
                     user_id=current_user_data.user_id,
                     items=stack
                 )

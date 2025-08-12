@@ -1,13 +1,13 @@
 
-from typing import List
-from ..schemas.angles import Angle
-from beanie import Document, Link, Indexed
+from typing import List, Annotated
+from .logs import Log
+from beanie import Document, Indexed, Link
 from pydantic import Field
 
 
 class User(Document):
-    user_id: int = Indexed(int, unique=True)
-    angles_logs: List[Link[Angle]] = Field(default_factory=list)
+    user_id: Annotated[int, Indexed(unique=True)]
+    logs: List[Link[Log]] = Field(default_factory=list)
 
     class Settings:
         name = "users"
