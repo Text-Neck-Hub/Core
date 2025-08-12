@@ -27,11 +27,17 @@ expired_token_exception = HTTPException(
 
 
 def build_decode_kwargs() -> dict:
+    options = {
+        "verify_aud": bool(getattr(settings, "JWT_AUDIENCE", None)),
+    }
+    leeway = getattr(settings, "JWT_LEEWAY_SECONDS", 0)
+    if isinstance(leeway, (int, float)) and leeway > 0:
+        options["leeway"] = int(leeway)
+
     kwargs = {
         "key": settings.SECRET_KEY,
         "algorithms": [settings.JWT_ALGORITHM],
-        "options": {"verify_aud": bool(getattr(settings, "JWT_AUDIENCE", None))},
-        "leeway": getattr(settings, "JWT_LEEWAY_SECONDS", 0),
+        "options": options,
     }
     if getattr(settings, "JWT_AUDIENCE", None):
         kwargs["audience"] = settings.JWT_AUDIENCE
@@ -55,7 +61,7 @@ async def get_http_token_payload(token: Annotated[str, Depends(oauth2_scheme)]) 
     try:
         payload = jwt.decode(token, **build_decode_kwargs())
         user_id = extract_user_id(payload)
-        await user_repo.get_or_create_by_user_id(user_id)
+        await user_repo.get_or_create_by_user_id(user_id=user_id)
         return TokenData(user_id=user_id)
     except ExpiredSignatureError:
         raise expired_token_exception

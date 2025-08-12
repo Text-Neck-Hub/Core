@@ -9,8 +9,9 @@ from ..services.core import CoreService
 from ..repositories.log_repository import LogRepository
 from ..auth.authentication import get_ws_token_payload
 from ..schemas.jwt import TokenData
-from ..schemas.logs import Angle
+from ..schemas.logs import Log
 
+log_repo = LogRepository()
 logger = logging.getLogger('prod')
 textneck_router = APIRouter(prefix="/ws")
 COMMANDS = {"init", "pause", "resume", "stop"}
@@ -22,7 +23,7 @@ async def predict_textneck(
     current_user_data: Annotated[TokenData, Depends(get_ws_token_payload)]
 ):
     await manager.connect(websocket)
-    stack: list[Angle] = []
+    stack: list[Log] = []
     paused = False
     angle_threshold: float | None = None
     shoulder_y_diff_threshold: float | None = None
@@ -115,7 +116,7 @@ async def predict_textneck(
                 if val is None:
                     val = processed.get("angle_value")
                 if val is not None:
-                    log = Angle(
+                    log = Log(
                         angle=float(val),
                         shoulder_y_diff=processed.get("shoulder_y_diff_px"),
                         shoulder_y_avg=processed.get("shoulder_y_avg_px"),
@@ -123,7 +124,7 @@ async def predict_textneck(
                     )
                     stack.append(log)
                     if len(stack) >= 5:
-                        await LogRepository.push_logs(
+                        await log_repo.push_logs(
                             user_id=current_user_data.user_id,
                             items=stack
                         )
@@ -134,7 +135,7 @@ async def predict_textneck(
     except WebSocketDisconnect:
         if stack:
             try:
-                await LogRepository.push_logs(
+                await log_repo.push_logs(
                     user_id=current_user_data.user_id,
                     items=stack
                 )
@@ -146,7 +147,7 @@ async def predict_textneck(
         logger.error(f"WebSocket error: {e}", exc_info=True)
         if stack:
             try:
-                await LogRepository.push_logs(
+                await log_repo.push_logs(
                     user_id=current_user_data.user_id,
                     items=stack
                 )
