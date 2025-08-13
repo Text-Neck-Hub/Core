@@ -6,14 +6,15 @@ import logging
 
 from ..connection.manager import manager
 from ..services.core import CoreService
-from ..repositories.log_repository import LogRepository
+from ..database.orm import Database
+from ..models.users import User
 from ..auth.authentication import get_ws_token_payload
 from ..schemas.jwt import TokenData
-from ..schemas.logs import Log
+from ..schemas.angles import Angle
 
-log_repo = LogRepository()
 logger = logging.getLogger('prod')
 textneck_router = APIRouter(prefix="/ws")
+user_repo = Database(User)
 COMMANDS = {"init", "pause", "resume", "stop"}
 
 
@@ -23,7 +24,7 @@ async def predict_textneck(
     current_user_data: Annotated[TokenData, Depends(get_ws_token_payload)]
 ):
     await manager.connect(websocket)
-    stack: list[Log] = []
+    stack: list[Angle] = []
     paused = False
     angle_threshold: float | None = None
     shoulder_y_diff_threshold: float | None = None
@@ -84,6 +85,7 @@ async def predict_textneck(
                             "shoulder_y_avg_threshold": shoulder_y_avg_threshold
                         }
                     })
+                    continue
 
                 if cmd == "pause":
                     if not paused:
@@ -116,15 +118,15 @@ async def predict_textneck(
                 if val is None:
                     val = processed.get("angle_value")
                 if val is not None:
-                    log = Log(
+                    log = Angle(
                         angle=float(val),
                         shoulder_y_diff=processed.get("shoulder_y_diff_px"),
                         shoulder_y_avg=processed.get("shoulder_y_avg_px"),
                         logged_at=datetime.now(timezone.utc)
                     )
                     stack.append(log)
-                    if len(stack) >= 5:
-                        await log_repo.push_logs(
+                    if len(stack) >= 3:
+                        logs = await user_repo.push_many_by_user_id(
                             user_id=current_user_data.user_id,
                             items=stack
                         )
@@ -135,7 +137,7 @@ async def predict_textneck(
     except WebSocketDisconnect:
         if stack:
             try:
-                await log_repo.push_logs(
+                await user_repo.push_many_by_user_id(
                     user_id=current_user_data.user_id,
                     items=stack
                 )
@@ -147,7 +149,7 @@ async def predict_textneck(
         logger.error(f"WebSocket error: {e}", exc_info=True)
         if stack:
             try:
-                await log_repo.push_logs(
+                await user_repo.push_many_by_user_id(
                     user_id=current_user_data.user_id,
                     items=stack
                 )

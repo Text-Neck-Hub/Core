@@ -1,8 +1,8 @@
-from datetime import datetime, timezone
 from pydantic import BaseModel, Field
+from datetime import datetime, timezone
 
 
-class Log(BaseModel):
+class Angle(BaseModel):
     angle: float
     shoulder_y_diff: float
     shoulder_y_avg: float
