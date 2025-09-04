@@ -47,4 +47,5 @@ for field_name, value in settings.model_dump().items():
             f"환경변수 '{field_name}' 를 찾을 수 없거나 값이 설정되지 않았습니다.")
 
 
-Instrumentator().instrument(app).expose(app)
+Instrumentator().instrument(app).expose(
+    app, endpoint="/core/metrics", include_in_schema=False)
